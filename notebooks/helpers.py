@@ -1,5 +1,9 @@
+from os import path
+from pathlib import Path
 import numpy as np
 import scipy.stats
+
+fig_path = Path(path.abspath('/Users/adrian/projects/papers/lmc-stream-cluster/figures/'))
 
 def get_ext(G, bp, rp, ebv, maxnit=10, verbose=False):
     """ Compute the Gaia extinctions assuming relations from Babusieux

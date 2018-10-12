@@ -5,7 +5,8 @@
 #SBATCH -n 112
 #SBATCH -t 12:00:00                   # run time (hh:mm:ss)
 
-cd
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/home/apricewhelan/software/lib/
+cd /mnt/ceph/users/apricewhelan/projects/dr2-lmc-cluster/scripts
 
 module load gcc openmpi2
 

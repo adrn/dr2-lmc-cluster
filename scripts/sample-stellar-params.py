@@ -30,7 +30,9 @@ def worker(task):
     i1, i2, overwrite = task
 
     decam = load_data('../data/decam_apw.fits')
-    iso = MIST_Isochrone()
+    iso = MIST_Isochrone(['DECam_u',
+                          'DECam_g',
+                          'DECam_i'])
 
     for i in np.arange(i1, i2+1, dtype=int):
         row = decam[i]

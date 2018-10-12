@@ -1,4 +1,5 @@
 # Standard library
+import os
 from os import path
 import sys
 
@@ -64,6 +65,10 @@ def main(pool, n_cores=24, overwrite=False):
     n_rows = len(decam)
 
     tasks = [(i1, i2, overwrite) for (i1, i2), _ in chunk_tasks(n_rows, n_cores-1)]
+
+    # First make sure paths exist:
+    os.makedirs('chains', exist_ok=True)
+    os.makedirs('../plots', exist_ok=True)
 
     for _ in pool.map(worker, tasks):
         pass

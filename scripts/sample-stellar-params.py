@@ -47,13 +47,14 @@ def worker(task):
         model.set_bounds(distance=(1000., 50000.))
         model.fit_multinest(basename=name, overwrite=overwrite)
         model.save_hdf(model_file, path='chains')
+        sys.exit(0)
 
 
-def main(n_tasks):
+def main(pool, n_cores=24, overwrite=False):
     decam = load_data('../data/decam_apw.fits')
     n_rows = len(decam)
 
-    tasks = [(i1, i2) for (i1, i2), _ in chunk_tasks(n_rows, n_tasks)]
+    tasks = [(i1, i2, overwrite) for (i1, i2), _ in chunk_tasks(n_rows, n_cores-1)]
 
     for _ in pool.map(worker, tasks):
         pass
@@ -77,6 +78,9 @@ if __name__ == "__main__":
 
     # parser.add_argument("-s", "--seed", dest="seed", default=None, type=int,
     #                     help="Random number seed")
+    
+    parser.add_argument("--ncores", dest="n_cores", default=24, type=int,
+                        help="Number of MPI threads")
 
     parser.add_argument("-o", "--overwrite", dest="overwrite", default=False,
                         action='store_true')
@@ -92,4 +96,4 @@ if __name__ == "__main__":
     pool_kwargs = dict(mpi=args.mpi, processes=args.n_procs)
     pool = choose_pool(**pool_kwargs)
 
-    main(pool=pool, overwrite=args.overwrite)
+    main(pool=pool, overwrite=args.overwrite, n_cores=args.n_cores)

@@ -34,12 +34,12 @@ def worker(task):
     iso = MIST_Isochrone(['DECam_u',
                           'DECam_g',
                           'DECam_i'])
-    model_file = 'chains/starmodels.hdf5'
 
     for i in np.arange(i1, i2+1, dtype=int):
         row = decam[i]
         name = 'lmcla-{0}-'.format(row['index'])
-
+        model_file = 'chains/starmodels-{0}.hdf5'.format(str(row['index']))
+        
         if path.exists(model_file) and not overwrite:
             continue
 
@@ -49,7 +49,7 @@ def worker(task):
 
         model.set_bounds(distance=(1000., 50000.))
         model.fit_multinest(basename=name, overwrite=overwrite)
-        model.save_hdf(model_file, path=str(row['index']))
+        model.save_hdf(model_file)
 
         fig = model.corner_physical()
         fig.savefig('../plots/{0}-physical.png'.format(row['index']), dpi=200)

@@ -39,7 +39,7 @@ def worker(task):
     for i in np.arange(i1, i2+1, dtype=int):
         row = decam[i]
         name = 'lmcla-{0}-'.format(row['index'])
-        model_file = 'chains/starmodels-{0}.hdf5'.format(str(row['index']))
+        model_file = '../cache/starmodels-{0}.hdf5'.format(str(row['index']))
 
         if path.exists(model_file) and not overwrite:
             print('skipping {0} - already exists'.format(name))
@@ -55,17 +55,18 @@ def worker(task):
         # model.fit_multinest(basename=name, overwrite=overwrite)
         model.fit_mcmc(nwalkers=nwalkers,
                        p0=np.array([350., 8., -0.5, 30000., 0.1]),
-                       nburn=512, niter=2048)
+                       nburn=1024, niter=2048)
         model.save_hdf(model_file)
 
         fig = model.corner_physical()
-        fig.savefig('../plots/{0}-physical.png'.format(row['index']), dpi=200)
+        fig.savefig('../plots/isochrones/{0}-physical.png'.format(row['index']),
+                    dpi=200)
         plt.close(fig)
 
         fig = model.corner_observed()
-        fig.savefig('../plots/{0}-observed.png'.format(row['index']), dpi=200)
+        fig.savefig('../plots/isochrones/{0}-observed.png'.format(row['index']),
+                    dpi=200)
         plt.close(fig)
-        return
 
 
 def main(pool, n_cores=24, overwrite=False):
@@ -76,8 +77,8 @@ def main(pool, n_cores=24, overwrite=False):
     tasks = [(i1, i2, overwrite) for (i1, i2), _ in chunk_tasks(n_rows, n_cores-1)]
 
     # First make sure paths exist:
-    os.makedirs('chains', exist_ok=True)
-    os.makedirs('../plots', exist_ok=True)
+    os.makedirs('../cache', exist_ok=True)
+    os.makedirs('../plots/isochrones', exist_ok=True)
 
     for _ in pool.map(worker, tasks):
         pass

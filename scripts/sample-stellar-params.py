@@ -46,8 +46,9 @@ def worker(task):
             continue
 
         model = StarModel(ic=iso,
-                          DECam_g=(row['GMAG'], 2 * row['GERR']),
-                          DECam_i=(row['IMAG'], 2 * row['IERR'])) # MAGIC NUMBER
+                          DECam_g=(row['GMAG'], 2 * row['GERR']), # MAGIC NUMBER
+                          DECam_i=(row['IMAG'], 2 * row['IERR']), # MAGIC NUMBER
+                          use_emcee=True)
 
         print('sampling star {0}'.format(row['index']))
         model.set_bounds(distance=(1000., 50000.))

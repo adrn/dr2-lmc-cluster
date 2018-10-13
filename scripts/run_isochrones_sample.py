@@ -15,8 +15,6 @@ from isochrones.mist import MIST_Isochrone
 
 from schwimmbad import choose_pool
 
-from helpers import chunk_tasks
-
 def load_data(filename):
     decam = Table.read(filename)
     gi = decam['GMAG'] - decam['IMAG']
@@ -40,6 +38,7 @@ def worker(task):
         row = decam[i]
         name = 'lmcla-{0}-'.format(row['index'])
         model_file = '../cache/starmodels-{0}.hdf5'.format(str(row['index']))
+        sm_model_file = '../cache/starmodels-sm-{0}.hdf5'.format(str(row['index']))
 
         if path.exists(model_file) and not overwrite:
             print('skipping {0} - already exists'.format(name))
@@ -68,8 +67,13 @@ def worker(task):
                     dpi=200)
         plt.close(fig)
 
+        model._samples = model.samples[::1024]
+        model.save_hdf(sm_model_file)
+
 
 def main(pool, n_cores=24, overwrite=False):
+    from helpers import chunk_tasks
+
     decam = load_data('../data/decam_apw.fits')
     n_rows = len(decam)
     print('{0} stars to process'.format(n_rows))

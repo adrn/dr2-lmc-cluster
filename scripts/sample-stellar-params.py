@@ -41,12 +41,14 @@ def worker(task):
         model_file = 'chains/starmodels-{0}.hdf5'.format(str(row['index']))
         
         if path.exists(model_file) and not overwrite:
+            print('skipping {0} - already exists'.format(name))
             continue
-
+        
         model = StarModel(ic=iso,
                           DECam_g=(row['GMAG'], 2 * row['GERR']),
                           DECam_i=(row['IMAG'], 2 * row['IERR'])) # MAGIC NUMBER
 
+        print('sampling star {0}'.format(row['index']))
         model.set_bounds(distance=(1000., 50000.))
         model.fit_multinest(basename=name, overwrite=overwrite)
         model.save_hdf(model_file)
@@ -58,11 +60,13 @@ def worker(task):
         fig = model.corner_observed()
         fig.savefig('../plots/{0}-observed.png'.format(row['index']), dpi=200)
         plt.close(fig)
+        return
 
 
 def main(pool, n_cores=24, overwrite=False):
     decam = load_data('../data/decam_apw.fits')
     n_rows = len(decam)
+    print('{0} stars to process'.format(n_rows))
 
     tasks = [(i1, i2, overwrite) for (i1, i2), _ in chunk_tasks(n_rows, n_cores-1)]
 

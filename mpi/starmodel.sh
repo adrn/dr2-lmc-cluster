@@ -13,6 +13,6 @@ module load gcc openmpi2
 
 date
 
-srun python sample-stellar-params.py --mpi --ncores=160
+srun python run_isochrones_sample.py --mpi --ncores=160
 
 date

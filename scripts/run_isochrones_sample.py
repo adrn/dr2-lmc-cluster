@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 from isochrones import StarModel
 from isochrones.mist import MIST_Isochrone
+from isochrones.priors import FlatPrior
 
 def load_data(filename):
     decam = Table.read(filename)
@@ -44,12 +45,16 @@ def main(index, overwrite=False):
         sys.exit(0)
 
     model = StarModel(ic=iso,
-                      DECam_g=(row['GMAG'], 2 * row['GERR']), # MAGIC NUMBER
-                      DECam_i=(row['IMAG'], 2 * row['IERR']), # MAGIC NUMBER
+                      DECam_g=(row['GMAG'], np.sqrt(0.01**2 + row['GERR']**2)),
+                      DECam_i=(row['IMAG'], np.sqrt(0.01**2 + row['IERR']**2))
                      )
 
     print('sampling star {0}'.format(row['index']))
-    model.set_bounds(distance=(1000., 50000.))
+    model.set_bounds(distance=(1000., 100000.))
+    model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
+    model.set_bounds(feh=(-2, 0))
+    model._priors['feh'] = FlatPrior((-2, 0))
+    model.set_bounds(AV=(0, 0.2))
     model.fit_multinest(basename=name, overwrite=overwrite)
     # model.fit_mcmc(nwalkers=nwalkers,
     #                p0=np.array([350., 8., -0.5, 30000., 0.1]),

@@ -3,3 +3,5 @@ plots
 chains
 old
 *.glu
+mpi/*.e*
+mpi/*.o*

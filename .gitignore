@@ -4,3 +4,5 @@ chains
 old
 *.glu
 cache
+mpi/*.e*
+mpi/*.o*

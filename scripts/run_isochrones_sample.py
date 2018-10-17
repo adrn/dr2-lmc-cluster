@@ -47,7 +47,7 @@ def main(index, overwrite=False):
     # This is our "anchor star": it was identified as being near the turnoff,
     # bright, and positionally consistent with being in the LA cluster:
     j1, = np.where(decam['index'] == 24365)[0]
-    j2 = row['index']
+    j2 = index
 
     if j1 == j2:
         print('skipping anchor-anchor pair')

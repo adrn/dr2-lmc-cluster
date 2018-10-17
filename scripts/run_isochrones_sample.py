@@ -49,6 +49,10 @@ def main(index, overwrite=False):
     j1, = np.where(decam['index'] == 24365)[0]
     j2 = row['index']
 
+    if j1 == j2:
+        print('skipping anchor-anchor pair')
+        sys.exit(0)
+
     # To fit pairs as resolved binaries, we have to construct the observation
     # tree manually:
     tree = ObservationTree()

@@ -11,14 +11,14 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from isochrones import StarModel
+from isochrones.observation import Source, Observation, ObservationTree
 from isochrones.mist import MIST_Isochrone
-from isochrones.priors import FlatPrior
+from isochrones.priors import FlatPrior, PowerLawPrior
 
 def load_data(filename):
     decam = Table.read(filename)
     gi = decam['GMAG'] - decam['IMAG']
     gmag = decam['GMAG']
-    decam['index'] = np.arange(len(decam), dtype=int)
 
     cmd_mask = (gi < 0.3) & (gi > -1) & (gmag < 22) & (gmag > 15)
     return decam[cmd_mask]
@@ -44,17 +44,38 @@ def main(index, overwrite=False):
         print('skipping {0} - already exists'.format(name))
         sys.exit(0)
 
-    model = StarModel(ic=iso,
-                      DECam_g=(row['GMAG'], np.sqrt(0.01**2 + row['GERR']**2)),
-                      DECam_i=(row['IMAG'], np.sqrt(0.01**2 + row['IERR']**2))
-                     )
+    # This is our "anchor star": it was identified as being near the turnoff,
+    # bright, and positionally consistent with being in the LA cluster:
+    j1, = np.where(decam['index'] == 24365)[0]
+    j2 = row['index']
+
+    # To fit pairs as resolved binaries, we have to construct the observation
+    # tree manually:
+    tree = ObservationTree()
+    for b in ['DECam_g', 'DECam_i']:
+        o = Observation('DECam', b, 1.)
+        s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
+                    np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
+        s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
+                    np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j2]**2),
+                    separation=100.)
+        o.add_source(s0)
+        o.add_source(s1)
+        tree.add_observation(o)
+
+    model = StarModel(ic=iso, obs=tree)
 
     print('setting priors')
-    model.set_bounds(distance=(1000., 100000.))
+    model.set_bounds(distance=(1000., 100000.)) # 1 to 100 kpc
     model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
-    model.set_bounds(feh=(-2, 0))
-    model._priors['feh'] = FlatPrior((-2, 0))
-    model.set_bounds(AV=(0, 0.2))
+
+    model.set_bounds(feh=(-2, 0.5))
+    model._priors['feh'] = FlatPrior((-2, 0.5))
+
+    model.set_bounds(AV=(1e-3, 1))
+    model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
+
+    model.set_bounds(mass=(0.2, 20.))
 
     print('sampling star {0}'.format(row['index']))
     model.fit_multinest(basename=name, overwrite=overwrite)

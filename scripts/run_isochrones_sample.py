@@ -67,7 +67,7 @@ def main(index, overwrite=False):
         o.add_source(s1)
         tree.add_observation(o)
 
-    model = StarModel(ic=iso, obs=tree)
+    model = StarModel(ic=iso, obs=tree, N=[1, 2])
 
     print('setting priors')
     model.set_bounds(distance=(1000., 100000.)) # 1 to 100 kpc
@@ -79,7 +79,7 @@ def main(index, overwrite=False):
     model.set_bounds(AV=(1e-3, 1))
     model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
 
-    model.set_bounds(mass=(0.2, 20.))
+    model.set_bounds(mass=(0.02, 25.))
 
     print('sampling star {0}'.format(row['index']))
     model.fit_multinest(basename=name, overwrite=overwrite)

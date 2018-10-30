@@ -1,3 +1,6 @@
+# Third-party
+from astropy.table import Table
+
 def chunk_tasks(n_tasks, n_batches, arr=None, args=None, start_idx=0):
     """Split the tasks into some number of batches to sent out to MPI workers.
     Parameters
@@ -47,3 +50,12 @@ def chunk_tasks(n_tasks, n_batches, arr=None, args=None, start_idx=0):
             tasks.append([arr[start_idx:n_tasks+start_idx], start_idx] + args)
 
     return tasks
+
+
+def load_data(filename):
+    decam = Table.read(filename)
+    gi = decam['GMAG'] - decam['IMAG']
+    gmag = decam['GMAG']
+
+    cmd_mask = (gi < 0.3) & (gi > -1) & (gmag < 22) & (gmag > 15)
+    return decam[cmd_mask]

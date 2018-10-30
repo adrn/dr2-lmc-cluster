@@ -16,7 +16,7 @@ from isochrones import StarModel
 from isochrones.mist import MIST_Isochrone
 from isochrones.priors import FlatPrior, PowerLawPrior
 
-from .helpers import load_data
+from helpers import load_data
 
 def main(index, overwrite=False):
     # First make sure paths exist:

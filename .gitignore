@@ -4,5 +4,5 @@ chains
 old
 *.glu
 cache
-mpi/*.e*
-mpi/*.o*
+mpi
+hierarch_blobs.npy

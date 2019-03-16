@@ -32,9 +32,8 @@ def main(index, overwrite=False):
     # Load the DECam photometry
     decam = load_data('../data/decam_apw.fits')
 
-    iso = MIST_Isochrone(['DECam_u',
-                          'DECam_g',
-                          'DECam_i'])
+    iso = MIST_Isochrone(['PanSTARRS_g',
+                          'PanSTARRS_i'])
 
     row = decam[index]
     name = 'lmcla-{0}-'.format(row['index'])
@@ -56,8 +55,8 @@ def main(index, overwrite=False):
     # To fit pairs as resolved binaries, we have to construct the observation
     # tree manually:
     tree = ObservationTree()
-    for b in ['DECam_g', 'DECam_i']:
-        o = Observation('DECam', b, 1.)
+    for b in ['PanSTARRS_g', 'PanSTARRS_i']:
+        o = Observation('PanSTARRS', b, 1.)
         s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
                     np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
         s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
@@ -71,7 +70,7 @@ def main(index, overwrite=False):
 
     print('setting priors')
     model.set_bounds(distance=(1000., 100000.)) # 1 to 100 kpc
-    model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
+    # model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
 
     model.set_bounds(feh=(-2, 0.5))
     model._priors['feh'] = FlatPrior((-2, 0.5))

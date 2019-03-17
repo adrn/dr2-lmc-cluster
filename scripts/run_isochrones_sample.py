@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from isochrones import StarModel
 from isochrones.observation import Source, Observation, ObservationTree
 from isochrones.mist import MIST_Isochrone
-from isochrones.priors import FlatPrior, PowerLawPrior, (5000., 100000.)
+from isochrones.priors import FlatPrior, PowerLawPrior, GaussianPrior
 
 def load_data(filename):
     decam = Table.read(filename)

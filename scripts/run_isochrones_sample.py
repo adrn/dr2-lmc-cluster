@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from isochrones import StarModel
 from isochrones.observation import Source, Observation, ObservationTree
 from isochrones.mist import MIST_Isochrone
-from isochrones.priors import FlatPrior, PowerLawPrior
+from isochrones.priors import FlatPrior, PowerLawPrior, (5000., 100000.)
 
 def load_data(filename):
     decam = Table.read(filename)
@@ -55,21 +55,33 @@ def main(index, overwrite=False):
     # To fit pairs as resolved binaries, we have to construct the observation
     # tree manually:
     tree = ObservationTree()
+    # for b in ['PanSTARRS_g', 'PanSTARRS_i']:
+    #     o = Observation('PanSTARRS', b, 1.)
+    #     s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
+    #                 np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
+    #     s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
+    #                 np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j2]**2),
+    #                 separation=100.)
+    #     o.add_source(s0)
+    #     o.add_source(s1)
+    #     tree.add_observation(o)
     for b in ['PanSTARRS_g', 'PanSTARRS_i']:
         o = Observation('PanSTARRS', b, 1.)
-        s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
-                    np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
+        # s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
+        #             np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
         s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
                     np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j2]**2),
                     separation=100.)
-        o.add_source(s0)
+        # o.add_source(s0)
         o.add_source(s1)
         tree.add_observation(o)
 
-    model = StarModel(ic=iso, obs=tree, N=[1, 2])
+    # model = StarModel(ic=iso, obs=tree, N=[1, 2])
+    model = StarModel(ic=iso, obs=tree)
 
     print('setting priors')
-    model.set_bounds(distance=(1000., 100000.)) # 1 to 100 kpc
+    model.set_bounds(distance=(5000., 100000.)) # 10 to 100 kpc
+    model._priors['distance'] = GaussianPrior(30, 4., (5000., 100000.))
     # model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
 
     model.set_bounds(feh=(-2, 0.5))
@@ -78,7 +90,7 @@ def main(index, overwrite=False):
     model.set_bounds(AV=(1e-3, 1))
     model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
 
-    model.set_bounds(mass=(0.02, 25.))
+    model.set_bounds(mass=(0.02, 10.))
 
     print('sampling star {0}'.format(row['index']))
     model.fit_multinest(basename=name, overwrite=overwrite)

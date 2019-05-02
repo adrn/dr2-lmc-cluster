@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 from isochrones import StarModel
 from isochrones.observation import Source, Observation, ObservationTree
 from isochrones.mist import MIST_Isochrone
-from isochrones.priors import FlatPrior, PowerLawPrior, GaussianPrior
+from isochrones.priors import (FlatPrior, PowerLawPrior, GaussianPrior,
+                               FlatLogPrior)
 
 def load_data(filename):
     decam = Table.read(filename)
@@ -33,7 +34,8 @@ def main(index, overwrite=False):
     decam = load_data('../data/decam_apw.fits')
 
     iso = MIST_Isochrone(['PanSTARRS_g',
-                          'PanSTARRS_i'])
+                          'PanSTARRS_i',
+                          'SkyMapper_u'])
 
     row = decam[index]
     name = 'lmcla-{0}-'.format(row['index'])
@@ -45,55 +47,41 @@ def main(index, overwrite=False):
 
     # This is our "anchor star": it was identified as being near the turnoff,
     # bright, and positionally consistent with being in the LA cluster:
-    j1, = np.where(decam['index'] == 24365)[0]
+    # j1, = np.where(decam['index'] == 24365)[0]
     j2 = index
 
-    if j1 == j2:
-        print('skipping anchor-anchor pair')
-        sys.exit(0)
-
-    # To fit pairs as resolved binaries, we have to construct the observation
-    # tree manually:
+    # Fit as single
     tree = ObservationTree()
-    # for b in ['PanSTARRS_g', 'PanSTARRS_i']:
-    #     o = Observation('PanSTARRS', b, 1.)
-    #     s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
-    #                 np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
-    #     s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
-    #                 np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j2]**2),
-    #                 separation=100.)
-    #     o.add_source(s0)
-    #     o.add_source(s1)
-    #     tree.add_observation(o)
-    for b in ['PanSTARRS_g', 'PanSTARRS_i']:
-        o = Observation('PanSTARRS', b, 1.)
-        # s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
-        #             np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
-        s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
-                    np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j2]**2),
-                    separation=100.)
-        # o.add_source(s0)
+    for b in ['PanSTARRS_g', 'PanSTARRS_i', 'SkyMapper_u']:
+        survey, band = b.split('_')
+        o = Observation(survey, b, 1.)
+        s1 = Source(decam[band.capitalize() + 'MAG'][j2],
+                    decam[band.capitalize() + 'ERR'][j2])
         o.add_source(s1)
         tree.add_observation(o)
 
-    # model = StarModel(ic=iso, obs=tree, N=[1, 2])
-    model = StarModel(ic=iso, obs=tree)
+    model = StarModel(ic=iso, obs=tree, N=[2])
 
     print('setting priors')
     # model.set_bounds(distance=(5000., 100000.)) # 10 to 100 kpc
-    model._priors['distance'] = GaussianPrior(30, 4.) #, (5000., 100000.))
+    model._priors['distance'] = GaussianPrior(29000., 1000)
     # model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
 
     model.set_bounds(feh=(-2, 0.5))
     model._priors['feh'] = FlatPrior((-2, 0.5))
 
     model.set_bounds(AV=(1e-3, 1))
-    model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
+    # model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
+    model._priors['AV'] = GaussianPrior(0.2, 0.05) # , bounds=(1e-3, 1))
 
     model.set_bounds(mass=(0.02, 10.))
 
+    model._priors['age'] = FlatLogPrior((7, 9.))
+    model.set_bounds(age=(7, 9.))
+
     print('sampling star {0}'.format(row['index']))
-    model.fit_multinest(basename=name, overwrite=overwrite)
+    # model.fit_multinest(basename=name, overwrite=overwrite)
+    model.fit_multinest(basename=name, refit=True, n_live_points=4000)
     # model.fit_mcmc(nwalkers=nwalkers,
     #                p0=np.array([350., 8., -0.5, 30000., 0.1]),
     #                nburn=1024, niter=2048)

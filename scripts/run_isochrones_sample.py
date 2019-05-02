@@ -63,7 +63,7 @@ def main(index, overwrite=False):
     model = StarModel(ic=iso, obs=tree, N=[2])
 
     print('setting priors')
-    # model.set_bounds(distance=(5000., 100000.)) # 10 to 100 kpc
+    model.set_bounds(distance=(1000., 100000.)) # 1 to 100 kpc
     model._priors['distance'] = GaussianPrior(29000., 1000)
     # model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
 

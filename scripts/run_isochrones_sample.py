@@ -33,7 +33,8 @@ def main(index, overwrite=False):
     decam = load_data('../data/decam_apw.fits')
 
     iso = MIST_Isochrone(['PanSTARRS_g',
-                          'PanSTARRS_i'])
+                          'PanSTARRS_i',
+                          'SkyMapper_u'])
 
     row = decam[index]
     name = 'lmcla-{0}-'.format(row['index'])
@@ -55,45 +56,49 @@ def main(index, overwrite=False):
     # To fit pairs as resolved binaries, we have to construct the observation
     # tree manually:
     tree = ObservationTree()
-    # for b in ['PanSTARRS_g', 'PanSTARRS_i']:
-    #     o = Observation('PanSTARRS', b, 1.)
-    #     s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
-    #                 np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
-    #     s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
-    #                 np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j2]**2),
-    #                 separation=100.)
-    #     o.add_source(s0)
-    #     o.add_source(s1)
-    #     tree.add_observation(o)
-    for b in ['PanSTARRS_g', 'PanSTARRS_i']:
-        o = Observation('PanSTARRS', b, 1.)
-        # s0 = Source(decam[b[-1].capitalize() + 'MAG'][j1],
-        #             np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j1]**2))
-        s1 = Source(decam[b[-1].capitalize() + 'MAG'][j2],
-                    np.sqrt(0.01**2 + decam[b[-1].capitalize() + 'ERR'][j2]**2),
+    for b in ['PanSTARRS_g', 'PanSTARRS_i', 'SkyMapper_u']:
+        survey, band = b.split('_')
+
+        if band == 'u' and decam[band.capitalize() + 'MAG'][j2] > 21:
+            extra_s = 0.2
+        else:
+            extra_s = 0.005
+
+        o = Observation(survey, b, 1.)
+        s0 = Source(decam[band.capitalize() + 'MAG'][j1],
+                    np.sqrt(0.005**2 + decam[band.capitalize() + 'ERR'][j1]**2))
+        s1 = Source(decam[band.capitalize() + 'MAG'][j2],
+                    np.sqrt(extra_s**2 + decam[band.capitalize() + 'ERR'][j2]**2),
                     separation=100.)
-        # o.add_source(s0)
+        o.add_source(s0)
         o.add_source(s1)
         tree.add_observation(o)
 
-    # model = StarModel(ic=iso, obs=tree, N=[1, 2])
-    model = StarModel(ic=iso, obs=tree)
+    model = StarModel(ic=iso, obs=tree, N=[1, 2])
+    # model = StarModel(ic=iso, obs=tree)
 
     print('setting priors')
-    # model.set_bounds(distance=(5000., 100000.)) # 10 to 100 kpc
-    model._priors['distance'] = GaussianPrior(30, 4.) #, (5000., 100000.))
-    # model.set_bounds(eep=(202, 355)) # ZAMS to TAMS
+    dist_bounds = [1 * 1e3, 100 * 1e3] # pc
+    # model._priors['distance'] = FlatPrior(dist_bounds)
+    model._priors['distance'] = GaussianPrior(30*1e3, 10*1e3, bounds=dist_bounds)
+    model.set_bounds(distance=dist_bounds) # 1 to 100 kpc
 
-    model.set_bounds(feh=(-2, 0.5))
-    model._priors['feh'] = FlatPrior((-2, 0.5))
+    feh_bounds = (-2., 0.5)
+    model.set_bounds(feh=feh_bounds)
+    # model._priors['feh'] = FlatPrior(feh_bounds)
+    model._priors['feh'] = GaussianPrior(-1.1, 0.25, bounds=feh_bounds)
 
-    model.set_bounds(AV=(1e-3, 1))
-    model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
+    AV_bounds = (0, 1)
+    model.set_bounds(AV=AV_bounds)
+    # model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
+    model._priors['AV'] = GaussianPrior(0.2, 0.05, bounds=AV_bounds)
 
-    model.set_bounds(mass=(0.02, 10.))
+    age_bounds = (7, 9.5)
+    model.set_bounds(age=age_bounds)
+    model._priors['age'] = GaussianPrior(8, 0.5, bounds=age_bounds)
 
     print('sampling star {0}'.format(row['index']))
-    model.fit_multinest(basename=name, overwrite=overwrite)
+    model.fit_multinest(basename=name, refit=overwrite, overwrite=overwrite)
     # model.fit_mcmc(nwalkers=nwalkers,
     #                p0=np.array([350., 8., -0.5, 30000., 0.1]),
     #                nburn=1024, niter=2048)

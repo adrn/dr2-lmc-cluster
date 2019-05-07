@@ -86,16 +86,17 @@ def main(index, overwrite=False):
     feh_bounds = (-2., 0.5)
     model.set_bounds(feh=feh_bounds)
     # model._priors['feh'] = FlatPrior(feh_bounds)
-    model._priors['feh'] = GaussianPrior(-1.1, 0.25, bounds=feh_bounds)
+    model._priors['feh'] = GaussianPrior(-1.1, 0.5, bounds=feh_bounds)
 
     AV_bounds = (0, 1)
     model.set_bounds(AV=AV_bounds)
-    # model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
-    model._priors['AV'] = GaussianPrior(0.2, 0.05, bounds=AV_bounds)
+    model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
+    # model._priors['AV'] = GaussianPrior(0.2, 0.1, bounds=AV_bounds)
 
     age_bounds = (7, 9.5)
     model.set_bounds(age=age_bounds)
-    model._priors['age'] = GaussianPrior(8, 0.5, bounds=age_bounds)
+    # model._priors['age'] = GaussianPrior(8, 0.5, bounds=age_bounds)
+    model._priors['age'] = FlatPrior(age_bounds)
 
     print('sampling star {0}'.format(row['index']))
     model.fit_multinest(basename=name, refit=overwrite, overwrite=overwrite)

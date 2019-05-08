@@ -99,7 +99,8 @@ def main(index, overwrite=False):
     model._priors['age'] = FlatPrior(age_bounds)
 
     print('sampling star {0}'.format(row['index']))
-    model.fit_multinest(basename=name, refit=overwrite, overwrite=overwrite)
+    model.fit_multinest(basename=name, refit=overwrite, overwrite=overwrite,
+                        n_live_points=2048)
     # model.fit_mcmc(nwalkers=nwalkers,
     #                p0=np.array([350., 8., -0.5, 30000., 0.1]),
     #                nburn=1024, niter=2048)

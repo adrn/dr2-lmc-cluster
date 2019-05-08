@@ -88,8 +88,8 @@ def main(index, overwrite=False):
 
     AV_bounds = (0, 1)
     model.set_bounds(AV=AV_bounds)
-    # model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
-    model._priors['AV'] = GaussianPrior(0.224, 0.1, bounds=AV_bounds) # from bayestar
+    model._priors['AV'] = PowerLawPrior(-1.1, (1e-3, 1))
+    # model._priors['AV'] = GaussianPrior(0.224, 0.1, bounds=AV_bounds) # from bayestar
 
     age_bounds = (7, 9.5)
     # model._priors['age'] = GaussianPrior(8, 0.5, bounds=age_bounds)

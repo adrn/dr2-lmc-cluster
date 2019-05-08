@@ -76,9 +76,9 @@ def main(index, overwrite=False):
     # model = StarModel(ic=iso, obs=tree)
 
     print('setting priors')
-    dist_bounds = [1 * 1e3, 100 * 1e3] # pc
-    model._priors['distance'] = PowerLawPrior(2, bounds=dist_bounds)
-    # model._priors['distance'] = GaussianPrior(30*1e3, 10*1e3, bounds=dist_bounds)
+    dist_bounds = [1e3, 100e3] # pc
+    # model._priors['distance'] = PowerLawPrior(2, bounds=dist_bounds)
+    model._priors['distance'] = GaussianPrior(29e3, 5e3, bounds=dist_bounds)
     model.set_bounds(distance=dist_bounds) # 1 to 100 kpc
 
     feh_bounds = (-2., 0.5)

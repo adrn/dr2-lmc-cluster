@@ -33,8 +33,7 @@ def main(index, overwrite=False):
     decam = load_data('../data/decam_apw.fits')
 
     iso = MIST_Isochrone(['PanSTARRS_g',
-                          'PanSTARRS_i',
-                          'SkyMapper_u'])
+                          'PanSTARRS_i'])
 
     row = decam[index]
     name = 'lmcla-{0}-'.format(row['index'])
@@ -56,7 +55,7 @@ def main(index, overwrite=False):
     # To fit pairs as resolved binaries, we have to construct the observation
     # tree manually:
     tree = ObservationTree()
-    for b in ['PanSTARRS_g', 'PanSTARRS_i', 'SkyMapper_u']:
+    for b in ['PanSTARRS_g', 'PanSTARRS_i']: # , 'SkyMapper_u']:
         survey, band = b.split('_')
 
         if band == 'u' and decam[band.capitalize() + 'MAG'][j2] > 21:
